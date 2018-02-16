@@ -1,0 +1,6 @@
+.git*            export-ignore
+.hooks*          export-ignore
+
+*.md             whitespace=tab-in-indent conflict-marker-size=30
+
+*.patch         -whitespace -text
