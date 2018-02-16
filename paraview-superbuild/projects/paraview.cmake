@@ -45,11 +45,8 @@ set(paraview_all_plugins
 if (superbuild_build_phase)
   get_property(paraview_plugins GLOBAL
     PROPERTY paraview_plugins)
-  get_property(paraview_plugin_dirs_external GLOBAL
-    PROPERTY paraview_plugin_dirs_external)
 
-  set(paraview_plugin_dirs
-    "${paraview_plugin_dirs_external}")
+  set(paraview_plugin_dirs)
   foreach (paraview_plugin IN LISTS paraview_plugins)
     if (${paraview_plugin}_enabled AND TARGET "${paraview_plugin}")
       set(plugin_source_dir "<SOURCE_DIR>")
@@ -88,9 +85,7 @@ set(paraviews_platform_dependencies)
 if (UNIX)
   if (NOT APPLE)
     list(APPEND paraviews_platform_dependencies
-      mesa osmesa egl
-
-      boxlib
+      mesa osmesa egl glu
 
       # Needed for fonts to work properly.
       fontconfig)
@@ -112,11 +107,10 @@ superbuild_add_project(paraview
   DEFAULT_ON
   DEPENDS_OPTIONAL
     cxx11 boost hdf5 matplotlib mpi numpy png
-    python qt4 qt5 visitbridge zlib silo
-    xdmf3 ospray vrpn vtkm tbb netcdf
+    python qt4 qt5 visitbridge zlib silo cgns
+    xdmf3 ospray vrpn tbb netcdf
     paraviewusersguide paraviewgettingstartedguide
     paraviewtutorial paraviewtutorialdata paraviewweb
-    paraviewpluginsexternal
     ${paraview_all_plugins}
     ${paraviews_platform_dependencies}
     ${PARAVIEW_EXTERNAL_PROJECTS}
@@ -135,18 +129,16 @@ superbuild_add_project(paraview
     -DPARAVIEW_USE_MPI:BOOL=${mpi_enabled}
     -DPARAVIEW_USE_OSPRAY:BOOL=${ospray_enabled}
     -DPARAVIEW_USE_VISITBRIDGE:BOOL=${visitbridge_enabled}
+    -DPARAVIEW_ENABLE_CGNS:BOOL=${cgns_enabled}
     -DVISIT_BUILD_READER_CGNS:BOOL=OFF # force to off
     -DVISIT_BUILD_READER_GMV:BOOL=${paraview_visit_gmv}
     -DVISIT_BUILD_READER_Silo:BOOL=${silo_enabled}
-    -DVISIT_BUILD_READER_Boxlib3D:BOOL=${boxlib_enabled}
     -DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=${paraview_install_development_files}
     -DPARAVIEW_ENABLE_MATPLOTLIB:BOOL=${matplotlib_enabled}
     -DPARAVIEW_FREEZE_PYTHON:BOOL=${PARAVIEW_FREEZE_PYTHON}
     -DVTK_USE_SYSTEM_NETCDF:BOOL=${netcdf_enabled}
-    -DVTK_USE_SYSTEM_NETCDFCPP:BOOL=${netcdf_built_by_superbuild}
     -DVTK_USE_SYSTEM_FREETYPE:BOOL=${freetype_enabled}
     -DVTK_USE_SYSTEM_HDF5:BOOL=${hdf5_enabled}
-    -DHDF5_NO_FIND_PACKAGE_CONFIG_FILE:BOOL=ON
     -DVTK_USE_SYSTEM_LIBXML2:BOOL=${libxml2_enabled}
     -DVTK_USE_SYSTEM_PNG:BOOL=${png_enabled}
     -DVTK_USE_SYSTEM_ZLIB:BOOL=${zlib_enabled}
@@ -167,11 +159,6 @@ superbuild_add_project(paraview
     # vrpn
     -DPARAVIEW_BUILD_PLUGIN_VRPlugin:BOOL=${vrpn_enabled}
     -DPARAVIEW_USE_VRPN:BOOL=${vrpn_enabled}
-
-    # vtkm
-    -DPARAVIEW_BUILD_PLUGIN_VTKmFilters:BOOL=${vtkm_enabled}
-    -DPARAVIEW_USE_VTKM:BOOL=${vtkm_enabled}
-    -DModule_vtkAcceleratorsVTKm:BOOL=${vtkm_enabled}
 
     # Web
     -DPARAVIEW_ENABLE_WEB:BOOL=${paraviewweb_enabled}
@@ -196,20 +183,15 @@ if (paraview_install_development_files)
   find_program(SED_EXECUTABLE sed)
   mark_as_advanced(SED_EXECUTABLE)
   if (SED_EXECUTABLE)
-    superbuild_project_add_step("fixup-cmake-paths"
+    superbuild_project_add_step("fixupcmakepaths"
       COMMAND "${CMAKE_COMMAND}"
               -Dinstall_location:PATH=<INSTALL_DIR>
               -Dparaview_version:STRING=${paraview_version}
               -P "${CMAKE_CURRENT_LIST_DIR}/scripts/paraview.fixupcmakepaths.cmake"
-      COMMENT   "Fixing paths in generated CMake files for packaging."
       DEPENDEES install
       WORKING_DIRECTORY <INSTALL_DIR>)
   endif ()
 endif ()
 
-if (paraview_SOURCE_SELECTION STREQUAL "5.3.0")
-  superbuild_apply_patch(paraview fix-benchmarks
-    "Fix various issues with the shipped benchmark scripts")
-  superbuild_apply_patch(paraview fix-vtkconfig-part1
-    "Fix various issues with the VTKConfig.cmake (Part 1)")
-endif ()
+superbuild_apply_patch(paraview fix-manyspheres
+  "Fix the sphere distributiuon for the manyspheres benchmark")

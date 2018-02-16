@@ -1,6 +1,5 @@
 set(paraview_doc_dir "doc")
 set(paraview_data_dir "data")
-set(paraview_plugin_path "bin")
 include(paraview.bundle.common)
 
 # Set NSIS install specific stuff.
@@ -26,11 +25,6 @@ set(library_paths "lib")
 if (QT_LIBRARY_DIR)
   list(APPEND library_paths
     "${QT_LIBRARY_DIR}")
-endif ()
-
-if (Qt5_DIR)
-  list(APPEND library_paths
-    "${Qt5_DIR}/../../../bin")
 endif ()
 
 # Install paraview executables to bin.
@@ -110,8 +104,17 @@ if (paraviewweb_enabled)
     COMPONENT   "superbuild")
 endif ()
 
+if (qt4_built_by_superbuild OR qt5_built_by_superbuild)
+  # TODO: get a list of Qt plugins.
+  foreach (qt_plugin IN LISTS qt_plugins)
+    superbuild_windows_install_plugin("${qt_plugin}.dll"
+      "bin"
+      "${library_paths}")
+  endforeach ()
+endif ()
+
 foreach (qt4_plugin_path IN LISTS qt4_plugin_paths)
-  get_filename_component(qt4_plugin_group "${qt4_plugin_path}" DIRECTORY)
+  get_filename_component(qt4_plugin_group "${qt4_plugin_paths}" DIRECTORY)
   get_filename_component(qt4_plugin_group "${qt4_plugin_group}" NAME)
 
   superbuild_windows_install_plugin(
@@ -119,24 +122,5 @@ foreach (qt4_plugin_path IN LISTS qt4_plugin_paths)
     "plugins/${qt4_plugin_group}"
     "${library_paths}")
 endforeach ()
-
-foreach (qt5_plugin_path IN LISTS qt5_plugin_paths)
-  get_filename_component(qt5_plugin_group "${qt5_plugin_path}" DIRECTORY)
-  get_filename_component(qt5_plugin_group "${qt5_plugin_group}" NAME)
-
-  superbuild_windows_install_plugin(
-    "${qt5_plugin_path}"
-    "bin/${qt5_plugin_group}"
-    "${library_paths}")
-endforeach ()
-
-if (qt5_enabled)
-  foreach (qt5_opengl_lib IN ITEMS opengl32sw libEGL libGLESv2)
-    superbuild_windows_install_plugin(
-      "${Qt5_DIR}/../../../bin/${qt5_opengl_lib}.dll"
-      "bin"
-      "${library_paths}")
-  endforeach ()
-endif ()
 
 paraview_install_extra_data()

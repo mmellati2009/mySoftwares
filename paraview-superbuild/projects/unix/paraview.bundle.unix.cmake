@@ -7,31 +7,18 @@ if (QT_LIBRARY_DIR)
     "${QT_LIBRARY_DIR}")
 endif ()
 
-if (Qt5_DIR)
-  list(APPEND library_paths
-    "${Qt5_DIR}/../..")
-endif ()
-
-set(include_regexes)
-if (fortran_enabled)
-  list(APPEND include_regexes
-    ".*/libgfortran"
-    ".*/libquadmath")
-endif ()
-
 set(exclude_regexes)
 if (PARAVIEW_DEFAULT_SYSTEM_GL OR
     (mesa_built_by_superbuild OR osmesa_built_by_superbuild))
   list(APPEND exclude_regexes
     ".*/libglapi"
-    ".*/libGL")
+    ".*/libGL[^U]")
 endif ()
 
 foreach (executable IN LISTS paraview_executables)
   superbuild_unix_install_program_fwd("${executable}"
     "lib/paraview-${paraview_version}"
     SEARCH_DIRECTORIES  "${library_paths}"
-    INCLUDE_REGEXES     ${include_regexes}
     EXCLUDE_REGEXES     ${exclude_regexes})
 endforeach ()
 
@@ -39,10 +26,9 @@ foreach (paraview_plugin IN LISTS paraview_plugins)
   superbuild_unix_install_plugin("lib${paraview_plugin}.so"
     "lib/paraview-${paraview_version}"
     "lib/paraview-${paraview_version}"
-    LOADER_PATHS    "${library_paths}"
-    INCLUDE_REGEXES ${include_regexes}
-    EXCLUDE_REGEXES ${exclude_regexes}
-    LOCATION        "lib/paraview-${paraview_version}/plugins/${paraview_plugin}/")
+    SEARCH_DIRECTORIES  "${library_paths}"
+    EXCLUDE_REGEXES     ${exclude_regexes}
+    LOCATION            "lib/paraview-${paraview_version}/plugins/${paraview_plugin}/")
 endforeach ()
 
 set(plugins_file "${CMAKE_CURRENT_BINARY_DIR}/paraview.plugins")
@@ -53,6 +39,7 @@ install(
   DESTINATION "lib/paraview-${paraview_version}"
   COMPONENT   superbuild
   RENAME      ".plugins")
+
 
 if (mesa_libraries)
   set(suffix)
@@ -69,8 +56,8 @@ if (mesa_libraries)
       superbuild_unix_install_plugin("${lib_filename}"
         "lib/paraview-${paraview_version}${suffix}"
         "lib"
-        LOADER_PATHS  "${library_paths}"
-        LOCATION      "lib/paraview-${paraview_version}${suffix}")
+        SEARCH_DIRECTORIES  "${library_paths}"
+        LOCATION            "lib/paraview-${paraview_version}${suffix}")
     endforeach ()
   endforeach ()
 endif ()
@@ -85,21 +72,19 @@ if (python_enabled)
     MODULES             paraview
                         vtk
                         ${python_modules}
-    INCLUDE_REGEXES     ${include_regexes}
     EXCLUDE_REGEXES     ${exclude_regexes}
     MODULE_DIRECTORIES  "${superbuild_install_location}/lib/python2.7/site-packages"
                         "${superbuild_install_location}/lib/paraview-${paraview_version}/site-packages"
-    LOADER_PATHS        "${library_paths}")
+    SEARCH_DIRECTORIES  "${library_paths}")
 
   superbuild_unix_install_python(
     MODULE_DESTINATION  "/site-packages/paraview"
     LIBDIR              "lib/paraview-${paraview_version}"
     MODULES             vtk
-    INCLUDE_REGEXES     ${include_regexes}
     EXCLUDE_REGEXES     ${exclude_regexes}
     MODULE_DIRECTORIES  "${superbuild_install_location}/lib/python2.7/site-packages"
                         "${superbuild_install_location}/lib/paraview-${paraview_version}/site-packages"
-    LOADER_PATHS        "${library_paths}")
+    SEARCH_DIRECTORIES  "${library_paths}")
 
   if (matplotlib_built_by_superbuild)
     install(
@@ -128,11 +113,11 @@ endif ()
 
 if (mpi_built_by_superbuild)
   set(mpi_executables_standalone
-    mpiexec
-    hydra_pmi_proxy)
+    mpiexec)
   set(mpi_executables_paraview
     hydra_nameserver
-    hydra_persist)
+    hydra_persist
+    hydra_pmi_proxy)
   foreach (mpi_executable IN LISTS mpi_executables_standalone)
     superbuild_unix_install_plugin("${superbuild_install_location}/bin/${mpi_executable}"
       "lib"
@@ -146,35 +131,14 @@ if (mpi_built_by_superbuild)
 endif ()
 
 foreach (qt4_plugin_path IN LISTS qt4_plugin_paths)
-  get_filename_component(qt4_plugin_group "${qt4_plugin_path}" DIRECTORY)
+  get_filename_component(qt4_plugin_group "${qt4_plugin_paths}" DIRECTORY)
   get_filename_component(qt4_plugin_group "${qt4_plugin_group}" NAME)
 
   superbuild_unix_install_plugin("${qt4_plugin_path}"
     "lib/paraview-${paraview_version}"
     "lib/paraview-${paraview_version}/${qt4_plugin_group}/"
-    LOADER_PATHS    "${library_paths}"
-    INCLUDE_REGEXES ${include_regexes}
-    EXCLUDE_REGEXES ${exclude_regexes})
-endforeach ()
-
-if (qt5_enabled)
-  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/qt.conf" "")
-  install(
-    FILES       "${CMAKE_CURRENT_BINARY_DIR}/qt.conf"
-    DESTINATION "lib/paraview-${paraview_version}"
-    COMPONENT   superbuild)
-endif ()
-
-foreach (qt5_plugin_path IN LISTS qt5_plugin_paths)
-  get_filename_component(qt5_plugin_group "${qt5_plugin_path}" DIRECTORY)
-  get_filename_component(qt5_plugin_group "${qt5_plugin_group}" NAME)
-
-  superbuild_unix_install_plugin("${qt5_plugin_path}"
-    "lib/paraview-${paraview_version}"
-    "lib/paraview-${paraview_version}/plugins/${qt5_plugin_group}/"
-    LOADER_PATHS    "${library_paths}"
-    INCLUDE_REGEXES ${include_regexes}
-    EXCLUDE_REGEXES ${exclude_regexes})
+    SEARCH_DIRECTORIES  "${library_paths}"
+    EXCLUDE_REGEXES     ${exclude_regexes})
 endforeach ()
 
 paraview_install_extra_data()

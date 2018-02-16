@@ -93,19 +93,17 @@ if (numpy_enabled)
   paraview_add_python_test("import-numpy" "import_numpy")
 endif ()
 
-if (scipy_enabled)
-  paraview_add_python_test("import-scipy" "import_scipy")
-endif ()
-
 if (matplotlib_enabled)
   paraview_add_python_test("import-matplotlib" "import_matplotlib")
 endif ()
 
 # Test to load various data files to ensure reader support.
-paraview_add_ui_test("data-csg.silo" "TestData-cs_silo"
-  "--data=${CMAKE_CURRENT_LIST_DIR}/data/csg.silo")
-paraview_add_ui_test("data-5blocks.cgns" "TestData-5blocks_cgns"
-  "--data=${CMAKE_CURRENT_LIST_DIR}/data/5blocks.cgns")
+if (cgns_enabled)
+  paraview_add_ui_test("data-csg.silo" "TestData-cs_silo"
+    "--data=${CMAKE_CURRENT_LIST_DIR}/data/csg.silo")
+  paraview_add_ui_test("data-5blocks.cgns" "TestData-5blocks_cgns"
+    "--data=${CMAKE_CURRENT_LIST_DIR}/data/5blocks.cgns")
+endif ()
 
 # Disabling this test for now since the Data file is too big. We probably need
 # to add support for Data repository similar to ParaView/VTK soon.
@@ -116,8 +114,7 @@ endif ()
 
 if (matplotlib_enabled)
   paraview_add_ui_test("matplotlib" "TestMatplotlib"
-    "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/Superbuild-TestMatplotlib.png"
-    "--test-threshold=15")
+    "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/Superbuild-TestMatplotlib.png")
 endif ()
 
 if (ospray_enabled)
@@ -165,13 +162,4 @@ endif ()
 
 if (vortexfinder2_enabled)
   paraview_add_ui_test("loadvortexfinderplugins" "LoadVotexFinderPlugins")
-endif ()
-
-if (vtkm_enabled)
-  paraview_add_ui_test("vtkm-contour" "VTKmContour"
-    --test-plugin=VTKmFilters)
-  paraview_add_ui_test("vtkm-gradient" "VTKmGradient"
-    --test-plugin=VTKmFilters)
-  paraview_add_ui_test("vtkm-threshold" "VTKmThreshold"
-    --test-plugin=VTKmFilters)
 endif ()

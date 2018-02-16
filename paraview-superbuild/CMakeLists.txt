@@ -8,21 +8,14 @@ list(INSERT CMAKE_MODULE_PATH 0
 macro (superbuild_setup_variables)
   include(SuperbuildVersionMacros)
   if (paraview_SOURCE_SELECTION STREQUAL "git")
-    # Assuming master; just use the latest version, but let the user set their
-    # own version in case it is actually a branch from some other version.
-    set(PARAVIEW_VERSION_DEFAULT "5.4.1"
-      CACHE STRING "The default version of ParaView to use if it cannot be detected")
-    mark_as_advanced(PARAVIEW_VERSION_DEFAULT)
-    set(paraview_default_version "${PARAVIEW_VERSION_DEFAULT}")
-  elseif (paraview_SOURCE_SELECTION STREQUAL "source")
-    # If it is a git repo, we'll get it that way, otherwise we will look at the
-    # `version.txt` in the checkout.
-    set(paraview_default_version "")
+    set(PARAVIEW_VERSION_DEFAULT "5.2.0-RC4" CACHE STRING
+      "The default version of ParaView to use if it can't be auto-determined")
   else ()
-    # The selection is the version number; use it.
-    set(paraview_default_version "${paraview_SOURCE_SELECTION}")
+    set(PARAVIEW_VERSION_DEFAULT "${paraview_SOURCE_SELECTION}" CACHE STRING
+      "The default version of ParaView to use if it can't be auto-determined")
   endif()
-  superbuild_set_version_variables(paraview "${paraview_default_version}" "paraview-version.cmake" "version.txt")
+  mark_as_advanced(PARAVIEW_VERSION_DEFAULT)
+  superbuild_set_version_variables(paraview "${PARAVIEW_VERSION_DEFAULT}" "paraview-version.cmake")
   set(paraview_version "${paraview_version_major}.${paraview_version_minor}")
 endmacro ()
 
@@ -32,7 +25,6 @@ function (superbuild_find_projects var)
   set(projects
     cxx11
     paraview
-    paraviewpluginsexternal
     python)
 
   option(USE_NONFREE_COMPONENTS "Enable the non-free parts of the superbuild" OFF)
@@ -41,11 +33,10 @@ function (superbuild_find_projects var)
   list(APPEND projects
     boost
     bzip2
-    embree
+    cgns
     freetype
     hdf5
     ispc
-    lapack
     netcdf
     matplotlib
     mpi
@@ -57,7 +48,6 @@ function (superbuild_find_projects var)
     png
     python
     pythonsetuptools
-    qt
     qt4
     qt5
     silo
@@ -66,7 +56,6 @@ function (superbuild_find_projects var)
     visitbridge
     vortexfinder2
     vrpn
-    vtkm
     xdmf3
     zlib)
 
@@ -75,19 +64,17 @@ function (superbuild_find_projects var)
       adios
       cosmotools
       ffmpeg
-      fortran
       genericio
       libxml2
-      mxml
-      scipy)
+      mxml)
 
     if (NOT APPLE)
       list(APPEND projects
-        boxlib
+        paraviewsdk
         catalyst
         egl
         fontconfig
-        glproto
+        glu
         llvm
         mesa
         osmesa
@@ -183,11 +170,6 @@ function (superbuild_add_packaging)
       QT_LIBRARY_DIR)
   endif ()
 
-  if (USE_SYSTEM_qt5)
-    list(APPEND superbuild_export_variables
-      Qt5_DIR)
-  endif ()
-
   if (NOT DEFINED PARAVIEW_CATALYST_EDITION)
     set(PARAVIEW_CATALYST_EDITION Full)
   endif ()
@@ -212,14 +194,6 @@ function (superbuild_add_packaging)
     list(APPEND superbuild_export_variables
       PARAVIEWSDK_PACKAGE_FILE_NAME)
   endif ()
-
-  set(paraview_PLUGINS_AUTOLOAD ""
-    CACHE STRING "List of plugins to autoload")
-  foreach (paraview_plugin IN LISTS paraview_PLUGINS_AUTOLOAD)
-    set("paraview_plugin_${paraview_plugin}_auto_load" 1)
-    list(APPEND superbuild_export_variables
-      "paraview_plugin_${paraview_plugin}_auto_load")
-  endforeach ()
 
   set(default_package)
 
