@@ -32,7 +32,7 @@ endif ()
 superbuild_add_extract_test("paraview" "${glob_prefix}" "${generator}" "${paraview_extract_dir}"
   LABELS "ParaView")
 
-if (NOT qt5_enabled)
+if (NOT (qt4_enabled OR qt5_enabled))
   set(paraview_exe)
 endif ()
 
@@ -125,12 +125,6 @@ if (ospray_enabled)
     "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/OSPRay.png")
 endif ()
 
-if (boxlib_enabled)
-  paraview_add_ui_test("boxlib3d" "Boxlib3d"
-    "--data=${CMAKE_CURRENT_LIST_DIR}/data/boxlib3d_small/Header.boxlib3d"
-    "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/Boxlib3d.png")
-endif ()
-
 paraview_add_ui_test("finddata" "TestFindData"
   "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/Superbuild-TestFindData.png")
 
@@ -162,8 +156,12 @@ if (mesa_enabled AND python_enabled)
   endif()
 endif ()
 
-paraview_add_ui_test("loaddistributedplugins" "LoadDistributedPlugins"
-  "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/LoadDistributedPlugins.png")
+if (python_enabled)
+  # This test needs Python since we test that the `CatalystScriptGeneratorPlugin` can
+  # be loaded.
+  paraview_add_ui_test("loaddistributedplugins" "LoadDistributedPlugins"
+    "--test-baseline=${CMAKE_CURRENT_LIST_DIR}/baselines/LoadDistributedPlugins.png")
+endif ()
 
 if (vortexfinder2_enabled)
   paraview_add_ui_test("loadvortexfinderplugins" "LoadVotexFinderPlugins")

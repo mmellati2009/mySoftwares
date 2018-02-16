@@ -1,6 +1,6 @@
 macro (paraview_superbuild_add_pdf name outname)
   superbuild_add_project("${name}"
-    DOWNLOAD_NO_EXTRACT 1
+    NO_EXTRACT 1
     CONFIGURE_COMMAND
       ""
     BUILD_COMMAND

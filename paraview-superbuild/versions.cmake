@@ -1,14 +1,14 @@
 superbuild_set_revision(llvm
-  URL     "http://www.paraview.org/files/dependencies/llvm-5.0.1.src.tar.xz"
-  URL_MD5 3a4ec6dcbc71579eeaec7cb157fe2168)
+  URL     "http://www.paraview.org/files/dependencies/llvm-4.0.0.src.tar.xz"
+  URL_MD5 ea9139a604be702454f6acf160b4f3a2)
 
 superbuild_set_revision(glproto
   URL     "http://www.paraview.org/files/dependencies/glproto-1.4.17.tar.bz2"
   URL_MD5 5565f1b0facf4a59c2778229c1f70d10)
 
 superbuild_set_revision(mesa
-    URL     "http://www.paraview.org/files/dependencies/mesa-18.0.0-rc4.tar.xz"
-    URL_MD5 195889b71ee88785d55b03d99e0034d3)
+    URL     "http://www.paraview.org/files/dependencies/mesa-17.1.4.tar.xz"
+    URL_MD5 be2ef7c9edec23b07f74f6512a6a6fa5)
 get_property(mesa_revision GLOBAL PROPERTY mesa_revision)
 superbuild_set_revision(osmesa ${mesa_revision})
 
@@ -27,6 +27,10 @@ superbuild_set_revision(silo
 superbuild_set_revision(genericio
   URL     "http://www.paraview.org/files/dependencies/genericio-master-a15ffc76cfa9f9674f933e8cb5ffc97a97fd7b27.zip"
   URL_MD5 daea4ea2076fb6a1b8ccded8e861e1be)
+
+superbuild_set_revision(acusolve
+  GIT_REPOSITORY "https://kwgitlab.kitware.com/paraview/acusolvereaderplugin.git"
+  GIT_TAG        origin/master)
 
 set(paraview_doc_ver_series "5.4")
 set(paraview_doc_ver "${paraview_doc_ver_series}.0")
@@ -48,7 +52,6 @@ superbuild_set_revision(paraviewtutorialdata
 # `superbuild_setup_variables` in `CMakeLists.txt` for the logic which relies
 # on this assumption.
 superbuild_set_selectable_source(paraview
-  # NOTE: When updating this selection, also update `README.md`.
   SELECT 5.4.1 DEFAULT
     URL     "http://www.paraview.org/files/v5.4/ParaView-v5.4.1.tar.gz"
     URL_MD5 4030c70477ec5a85aa72d6fc86a30753
@@ -97,34 +100,30 @@ superbuild_set_revision(ispc
   URL     "${ispc_file}"
   URL_MD5 "${ispc_md5}")
 
+superbuild_set_selectable_source(vtkm
+  SELECT git-stable DEFAULT
+    GIT_REPOSITORY     "https://gitlab.kitware.com/vtk/vtk-m.git"
+    GIT_TAG a181373382cf9a3c1de2708756f55797ec065ab6
+  SELECT git-master CUSTOMIZABLE
+    GIT_REPOSITORY "https://gitlab.kitware.com/vtk/vtk-m.git"
+    GIT_TAG        "origin/master")
+
 superbuild_set_revision(embree
-  URL     "http://www.paraview.org/files/dependencies/embree-2.17.0.tar.gz"
-  URL_MD5 3ea7a72546baee497ae8098bc12f3de6)
+  URL     "http://www.paraview.org/files/dependencies/embree-2.16.4.tar.gz"
+  URL_MD5 3d9674024198f2944a13dd0a476ff43c)
 
 superbuild_set_revision(ospray
-  URL     "http://www.paraview.org/files/dependencies/ospray-1.4.0.tar.gz"
-  URL_MD5 2a3a4895c5ec2a42c7af86a51727fb53)
-
-superbuild_set_revision(openvr
-  URL     "http://www.paraview.org/files/dependencies/openvr_1.0.10_win_thin.zip"
-  URL_MD5 062a029869423808aebc32f85edf38e2)
+  URL     "http://www.paraview.org/files/dependencies/ospray-1.3.0.tar.gz"
+  URL_MD5 d4d4505ec949d3e88242e9fc8243d50f)
 
 superbuild_set_revision(paraviewwebvisualizer
-  URL     "http://www.paraview.org/files/dependencies/visualizer-3.0.3.tar.gz"
-  URL_MD5 8d8dab2b956e9965669a2e5e26274648)
+  URL     "http://www.paraview.org/files/dependencies/visualizer-2.1.4.tar.gz"
+  URL_MD5 df43ebece543ceda3ab2f9c065cfa524)
 
 superbuild_set_revision(paraviewweblightviz
-  URL     "http://www.paraview.org/files/dependencies/light-viz-1.17.1.tar.gz"
-  URL_MD5 b168ce62b763655c1595aaa31ba28051)
-
-superbuild_set_revision(paraviewwebdivvy
-  URL     "http://www.paraview.org/files/dependencies/divvy-1.3.11.tar.gz"
-  URL_MD5 561957408186f55976fce9632ee90254)
+  URL     "http://www.paraview.org/files/dependencies/light-viz-1.16.4.tar.gz"
+  URL_MD5 724849431759d30ec0077f99937f1537)
 
 superbuild_set_revision(boxlib
   URL     "http://www.paraview.org/files/dependencies/boxlib-c114717e6c47188a0812804addcab61d7605ef89.tar.bz2"
   URL_MD5 fb96e9b2c347c9b790d0eab4ba810e14)
-
-superbuild_set_revision(las
-  URL     "http://www.paraview.org/files/dependencies/libLAS-1.8.1.tar.bz2"
-  URL_MD5 2e6a975dafdf57f59a385ccb87eb5919)

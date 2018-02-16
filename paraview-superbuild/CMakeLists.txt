@@ -39,7 +39,6 @@ function (superbuild_find_projects var)
   mark_as_advanced(USE_NONFREE_COMPONENTS)
 
   list(APPEND projects
-    cuda
     boost
     bzip2
     embree
@@ -55,22 +54,13 @@ function (superbuild_find_projects var)
     paraviewweb
     paraviewwebvisualizer
     paraviewweblightviz
-    paraviewwebdivvy
     png
-    pythonautobahn
-    pythonconstantly
-    pythonhyperlink
-    pythonincremental
-    pythonpygments
+    python
     pythonsetuptools
-    pythonsix
-    pythontwisted
-    pythontxaio
-    pythonwslink
-    pythonzopeinterface
+    qt
+    qt4
     qt5
     silo
-    las
     szip
     tbb
     visitbridge
@@ -98,7 +88,6 @@ function (superbuild_find_projects var)
         egl
         fontconfig
         glproto
-        gperf
         llvm
         mesa
         osmesa
@@ -114,13 +103,13 @@ function (superbuild_find_projects var)
     paraviewusersguide)
 
   if (USE_NONFREE_COMPONENTS)
-    # add non-free projects here.
+    list(APPEND projects
+      acusolve)
   endif ()
 
   if (WIN32)
     list(APPEND projects
       ftjam
-      openvr
       pywin32)
   endif ()
 
@@ -138,15 +127,8 @@ function (superbuild_sanity_check)
 
   superbuild_qt_sanity_check()
 
-  # Sanity check: Cannot have paraview and have cxx11 disabled.
-  if (NOT cxx11_enabled AND paraview_enabled)
-    #While ParaView doesn't depend on cxx11 it needs to make sure that
-    #other projects that optionally depend on it are built with cxx11
-    message(SEND_ERROR "Cannot disable cxx11 when paraview is enabled.")
-  endif ()
-
   # Sanity check: Cannot have EGL and Qt enabled at the same time.
-  if (egl_enabled AND qt5_enabled)
+  if (egl_enabled AND (qt4_enabled OR qt5_enabled))
     message(SEND_ERROR "Cannot enable EGL and Qt at the same time.")
   endif ()
 
@@ -155,13 +137,18 @@ function (superbuild_sanity_check)
     message(SEND_ERROR "Cannot enable EGL and Mesa at the same time.")
   endif ()
 
+  # Sanity check: Must use OpenGL2 backed with EGL
+  if (egl_enabled AND NOT PARAVIEW_RENDERING_BACKEND STREQUAL "OpenGL2")
+    message(SEND_ERROR "Cannot enable EGL with the old VTK rendering backend at the same time.")
+  endif ()
+
   # Sanity check: Cannot have EGL and OSMesa at the same time.
   if (egl_enabled AND osmesa_enabled)
     message(SEND_ERROR "Cannot enable EGL and OSMesa at the same time.")
   endif ()
 
-  # Sanity check: Cannot have OSMesa and Qt enabled at the same time if we're building ParaView.
-  if (osmesa_enabled AND qt5_enabled AND paraview_enabled)
+  # Sanity check: Cannot have OSMesa and Qt enabled at the same time.
+  if (osmesa_enabled AND (qt4_enabled OR qt5_enabled))
     message(SEND_ERROR "Cannot enable OSMesa and Qt at the same time.")
   endif ()
 
@@ -174,6 +161,7 @@ function (superbuild_sanity_check)
   if (paraview_enabled AND catalyst_enabled)
     message(SEND_ERROR "Cannot enable ParaView and Catalyst at the same time.")
   endif ()
+
 endfunction ()
 
 function (superbuild_add_packaging)
@@ -189,6 +177,11 @@ function (superbuild_add_packaging)
       TGZ)
   endif ()
   list(GET generators 0 default_generator)
+
+  if (USE_SYSTEM_qt4)
+    list(APPEND superbuild_export_variables
+      QT_LIBRARY_DIR)
+  endif ()
 
   if (USE_SYSTEM_qt5)
     list(APPEND superbuild_export_variables
@@ -265,27 +258,10 @@ function (superbuild_add_tests)
   add_subdirectory("${CMAKE_SOURCE_DIR}/tests" "${CMAKE_BINARY_DIR}/tests")
 endfunction ()
 
-set(qt5_skip_modules
-  qtconnectivity
-  qtgamepad
-  qtlocation
-  qtmultimedia
-  qtsensors
-  qtserialport
-  qtwayland
-  qtwebchannel
-  qtwebengine
-  qtwebsockets)
-
 set(boost_libraries
   date_time
-  filesystem
-  iostreams
-  program_options
   system
   thread)
-set(boost_extra_options
-  "-sNO_BZIP2=1")
 
 list(APPEND superbuild_version_files
   "${CMAKE_CURRENT_LIST_DIR}/versions.cmake")
@@ -297,17 +273,10 @@ list(APPEND superbuild_project_roots
 # set the default arguments used for "git clone"
 set(_git_clone_arguments_default --progress)
 
-# set the default for cxx11 to be enabled for this project
-set(_superbuild_default_cxx11 ON)
-
 if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/superbuild/CMakeLists.txt")
   message(FATAL_ERROR "It appears as though the superbuild infrastructure "
                       "is missing; did you forget to do `git submodule init` "
                       "and `git submodule update`?")
 endif ()
-
-if(BUILD_SHARED_LIBS AND CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-  string(APPEND superbuild_ld_flags "-shared-intel")
-endif()
 
 add_subdirectory(superbuild)

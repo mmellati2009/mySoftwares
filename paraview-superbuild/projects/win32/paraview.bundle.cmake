@@ -1,6 +1,6 @@
 set(paraview_doc_dir "doc")
 set(paraview_data_dir "data")
-set(paraview_plugin_path "bin/plugins")
+set(paraview_plugin_path "bin")
 include(paraview.bundle.common)
 
 # Set NSIS install specific stuff.
@@ -23,6 +23,11 @@ set(pvpython_description "pvpython ${paraview_version_full} (Python Shell)")
 
 set(library_paths "lib")
 
+if (QT_LIBRARY_DIR)
+  list(APPEND library_paths
+    "${QT_LIBRARY_DIR}")
+endif ()
+
 if (Qt5_DIR)
   list(APPEND library_paths
     "${Qt5_DIR}/../../../bin")
@@ -35,14 +40,14 @@ foreach (executable IN LISTS paraview_executables)
       "bin/${executable}.exe" "${${executable}_description}")
   endif ()
 
-  superbuild_windows_install_program("${executable}" "bin" SEARCH_DIRECTORIES
+  superbuild_windows_install_program("${executable}"
     "${library_paths}")
 endforeach()
 
 foreach (paraview_plugin IN LISTS paraview_plugins)
   superbuild_windows_install_plugin("${paraview_plugin}.dll"
-    "${paraview_plugin_path}/${paraview_plugin}" "bin/plugins/${paraview_plugin}" SEARCH_DIRECTORIES
-    "${paraview_plugin_path}/${paraview_plugin}" "${library_paths}" "${superbuild_install_location}/bin")
+    "bin"
+    "${library_paths}")
 endforeach ()
 
 set(plugins_file "${CMAKE_CURRENT_BINARY_DIR}/paraview.plugins")
@@ -50,7 +55,7 @@ paraview_add_plugin("${plugins_file}" ${paraview_plugins})
 
 install(
   FILES       "${plugins_file}"
-  DESTINATION "${paraview_plugin_path}"
+  DESTINATION "bin"
   COMPONENT   superbuild
   RENAME      ".plugins")
 
@@ -61,13 +66,11 @@ if (python_enabled)
   superbuild_windows_install_python(
     MODULES paraview
             vtk
-            vtkmodules
             ${python_modules}
     MODULE_DIRECTORIES  "${superbuild_install_location}/bin/Lib/site-packages"
                         "${superbuild_install_location}/lib/site-packages"
-                        "${superbuild_install_location}/lib/python2.7/site-packages"
-                        "${superbuild_install_location}/lib/paraview-${paraview_version_major}.${paraview_version_minor}/site-packages"
-    SEARCH_DIRECTORIES  "lib" "${superbuild_install_location}/bin")
+                        "${superbuild_install_location}/lib/paraview-${paraview_version}/site-packages"
+    SEARCH_DIRECTORIES  "lib")
 
   if (matplotlib_enabled)
     install(
@@ -82,9 +85,8 @@ if (python_enabled)
     MODULE_DIRECTORIES
             "${superbuild_install_location}/bin/Lib/site-packages"
             "${superbuild_install_location}/lib/site-packages"
-            "${superbuild_install_location}/lib/python2.7/site-packages"
-            "${superbuild_install_location}/lib/paraview-${paraview_version_major}.${paraview_version_minor}/site-packages"
-    SEARCH_DIRECTORIES  "lib" "${superbuild_install_location}/bin")
+            "${superbuild_install_location}/lib/paraview-${paraview_version}/site-packages"
+    SEARCH_DIRECTORIES  "lib")
 endif ()
 
 if (paraviewweb_enabled)
@@ -97,11 +99,26 @@ if (paraviewweb_enabled)
                 "${superbuild_install_location}/bin/Lib/site-packages/pywin32.version.txt"
     DESTINATION "bin/Lib/site-packages"
     COMPONENT   "superbuild")
+
+  install(
+    FILES       "${superbuild_install_location}/lib/paraview-${paraview_version}/site-packages/paraview/web/defaultProxies.json"
+    DESTINATION "bin/Lib/site-packages/paraview/web"
+    COMPONENT   "superbuild")
   install(
     DIRECTORY   "${superbuild_install_location}/share/paraview/web"
     DESTINATION "share/paraview-${paraview_version}"
     COMPONENT   "superbuild")
 endif ()
+
+foreach (qt4_plugin_path IN LISTS qt4_plugin_paths)
+  get_filename_component(qt4_plugin_group "${qt4_plugin_path}" DIRECTORY)
+  get_filename_component(qt4_plugin_group "${qt4_plugin_group}" NAME)
+
+  superbuild_windows_install_plugin(
+    "${qt4_plugin_path}"
+    "plugins/${qt4_plugin_group}"
+    "${library_paths}")
+endforeach ()
 
 foreach (qt5_plugin_path IN LISTS qt5_plugin_paths)
   get_filename_component(qt5_plugin_group "${qt5_plugin_path}" DIRECTORY)
@@ -109,9 +126,8 @@ foreach (qt5_plugin_path IN LISTS qt5_plugin_paths)
 
   superbuild_windows_install_plugin(
     "${qt5_plugin_path}"
-    "bin"
     "bin/${qt5_plugin_group}"
-    SEARCH_DIRECTORIES "${library_paths}")
+    "${library_paths}")
 endforeach ()
 
 if (qt5_enabled)
@@ -119,8 +135,7 @@ if (qt5_enabled)
     superbuild_windows_install_plugin(
       "${Qt5_DIR}/../../../bin/${qt5_opengl_lib}.dll"
       "bin"
-      "bin"
-      SEARCH_DIRECTORIES "${library_paths}")
+      "${library_paths}")
   endforeach ()
 endif ()
 
