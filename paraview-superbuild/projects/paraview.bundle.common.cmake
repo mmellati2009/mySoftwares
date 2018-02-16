@@ -50,12 +50,18 @@ if (qt4_enabled OR qt5_enabled)
 endif ()
 
 set(python_modules
+  cinema_python
   pygments
   six)
 
 if (numpy_built_by_superbuild)
   list(APPEND python_modules
     numpy)
+endif ()
+
+if (scipy_built_by_superbuild)
+  list(APPEND python_modules
+    scipy)
 endif ()
 
 if (matplotlib_built_by_superbuild)
@@ -66,6 +72,8 @@ endif ()
 if (paraviewweb_enabled)
   list(APPEND python_modules
     autobahn
+    constantly
+    incremental
     twisted
     zope)
 
@@ -96,34 +104,15 @@ function (paraview_add_plugin output)
   file(WRITE "${output}" "${contents}")
 endfunction ()
 
-set(paraview_plugins
-  AcceleratedAlgorithms
-  AnalyzeNIfTIIO
-  ArrowGlyph
-  GeodesicMeasurement
-  GMVReader
-  H5PartReader
-  Moments
-  NonOrthogonalSource
-  SLACTools
-  StreamingParticles
-  SurfaceLIC
-  PacMan
-  ThickenLayeredCells)
-
-if (paraview_has_gui)
+file(STRINGS "${superbuild_install_location}/${paraview_plugin_path}/.plugins"
+  paraview_plugin_lines
+  REGEX "name=\"[A-Za-z0-9]+\"")
+set(paraview_plugins)
+foreach (paraview_plugin_line IN LISTS paraview_plugin_lines)
+  string(REGEX REPLACE ".*name=\"\([A-Za-z0-9]+\)\".*" "\\1" paraview_plugin "${paraview_plugin_line}")
   list(APPEND paraview_plugins
-    CatalystScriptGeneratorPlugin
-    SierraPlotTools)
-endif ()
-
-if (vortexfinder2_enabled)
-  list(APPEND paraview_plugins
-    BDATReader
-    BDATSeriesReader
-    GLGPUSupercurrentFilter
-    GLGPUVortexFilter)
-endif ()
+    "${paraview_plugin}")
+endforeach ()
 
 if (osmesa_built_by_superbuild OR mesa_built_by_superbuild)
   set(mesa_libraries glapi)
@@ -187,6 +176,36 @@ if (qt4_enabled)
   superbuild_install_qt4_plugin_paths(qt4_plugin_paths ${qt4_plugins})
 else ()
   set(qt4_plugin_paths)
+endif ()
+
+if (qt5_enabled)
+  include(qt5.functions)
+
+  set(qt5_plugin_prefix)
+  if (NOT WIN32)
+    set(qt5_plugin_prefix "lib")
+  endif ()
+
+  set(qt5_plugins
+    sqldrivers/${qt5_plugin_prefix}qsqlite)
+
+  if (WIN32)
+    list(APPEND qt5_plugins
+      platforms/qwindows)
+  elseif (APPLE)
+    list(APPEND qt5_plugins
+      platforms/libqcocoa
+      printsupport/libcocoaprintersupport)
+  elseif (UNIX)
+    list(APPEND qt5_plugins
+      platforms/libqxcb
+      platforminputcontexts/libcomposeplatforminputcontextplugin
+      xcbglintegrations/libqxcb-glx-integration)
+  endif ()
+
+  superbuild_install_qt5_plugin_paths(qt5_plugin_paths ${qt5_plugins})
+else ()
+  set(qt5_plugin_paths)
 endif ()
 
 if (socat_built_by_superbuild)

@@ -4,7 +4,6 @@ set(BUILD_SHARED_LIBS  ON CACHE BOOL "")
 
 # Enable the appropriate packages
 set(ENABLE_boost       ON CACHE BOOL "")
-set(ENABLE_cgns        ON CACHE BOOL "")
 set(ENABLE_ffmpeg      ON CACHE BOOL "")
 set(ENABLE_freetype    ON CACHE BOOL "")
 set(ENABLE_genericio   ON CACHE BOOL "")
@@ -40,4 +39,4 @@ set(USE_SYSTEM_zlib       ON CACHE BOOL "")
 set(ospray_BUILD_ISA ALL CACHE STRING "")
 
 # Paraview details
-set(paraview_SOURCE_SELECTION 5.2.0-RC4 CACHE BOOL "")
+set(paraview_SOURCE_SELECTION 5.2.0 CACHE BOOL "")
